@@ -9,10 +9,10 @@ function App() {
   const [page, setPage] = useState('home')
   const [jobs, setJobs] = useState([])
   const [user, setUser] = useState(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     fetchJobs()
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setUser(session.user)
     })
@@ -29,6 +29,12 @@ function App() {
     setUser(null)
     setPage('home')
   }
+
+  const filteredJobs = jobs.filter(job =>
+    job.title.toLowerCase().includes(search.toLowerCase()) ||
+    job.company.toLowerCase().includes(search.toLowerCase()) ||
+    job.skills.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div style={{ fontFamily: 'Arial', maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
@@ -57,8 +63,15 @@ function App() {
       {page === 'home' && (
         <div>
           <p style={{ textAlign: 'center', color: 'gray' }}>Find your dream job powered by AI</p>
-          {jobs.length === 0 && <p style={{ textAlign: 'center' }}>Loading jobs...</p>}
-          {jobs.map(job => (
+          <input
+            type="text"
+            placeholder="🔍 Search by job title, company or skills..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ width: '100%', padding: '12px', marginBottom: '20px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '15px' }}
+          />
+          {filteredJobs.length === 0 && <p style={{ textAlign: 'center' }}>No jobs found! 😅</p>}
+          {filteredJobs.map(job => (
             <div key={job.id} style={{ background: '#f5f5f5', padding: '20px', borderRadius: '10px', marginBottom: '15px', borderLeft: '4px solid #2557a7' }}>
               <h2 style={{ margin: '0', color: '#2557a7' }}>{job.title}</h2>
               <p style={{ margin: '5px 0', fontWeight: 'bold' }}>{job.company}</p>
