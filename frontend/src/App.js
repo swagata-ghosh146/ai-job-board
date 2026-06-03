@@ -3,6 +3,7 @@ import Login from './Login'
 import Signup from './Signup'
 import PostJob from './PostJob'
 import ResumeMatch from './ResumeMatch'
+import ResumeUpload from './ResumeUpload'
 import { supabase } from './supabaseClient'
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={() => setPage('postjob')} style={{ background: page === 'postjob' ? '#2557a7' : 'white', color: page === 'postjob' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Post Job</button>
           <button onClick={() => setPage('resumematch')} style={{ background: page === 'resumematch' ? '#2557a7' : 'white', color: page === 'resumematch' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>🤖 Match</button>
+          <button onClick={() => setPage('resumeupload')} style={{ background: page === 'resumeupload' ? '#2557a7' : 'white', color: page === 'resumeupload' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📄 Resume</button>
           {user ? (
             <>
               <span style={{ color: '#2557a7', fontWeight: 'bold' }}>👋 {user.email}</span>
@@ -88,6 +90,7 @@ function App() {
       {page === 'signup' && <Signup />}
       {page === 'postjob' && <PostJob onJobPosted={() => { fetchJobs(); setPage('home') }} />}
       {page === 'resumematch' && <ResumeMatch />}
+      {page === 'resumeupload' && <ResumeUpload user={user} />}
 
     </div>
   )
