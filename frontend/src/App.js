@@ -8,9 +8,14 @@ import { supabase } from './supabaseClient'
 function App() {
   const [page, setPage] = useState('home')
   const [jobs, setJobs] = useState([])
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     fetchJobs()
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setUser(session.user)
+    })
   }, [])
 
   const fetchJobs = async () => {
@@ -19,17 +24,32 @@ function App() {
     else setJobs(data)
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setPage('home')
+  }
+
   return (
     <div style={{ fontFamily: 'Arial', maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
 
       {/* Navbar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <h1 onClick={() => setPage('home')} style={{ color: '#2557a7', margin: 0, cursor: 'pointer' }}>🚀 AI Job Board</h1>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={() => setPage('postjob')} style={{ background: page === 'postjob' ? '#2557a7' : 'white', color: page === 'postjob' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Post Job</button>
           <button onClick={() => setPage('resumematch')} style={{ background: page === 'resumematch' ? '#2557a7' : 'white', color: page === 'resumematch' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>🤖 Match</button>
-          <button onClick={() => setPage('login')} style={{ background: page === 'login' ? '#2557a7' : 'white', color: page === 'login' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Login</button>
-          <button onClick={() => setPage('signup')} style={{ background: page === 'signup' ? '#2557a7' : 'white', color: page === 'signup' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Sign Up</button>
+          {user ? (
+            <>
+              <span style={{ color: '#2557a7', fontWeight: 'bold' }}>👋 {user.email}</span>
+              <button onClick={handleLogout} style={{ background: 'red', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Logout</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setPage('login')} style={{ background: page === 'login' ? '#2557a7' : 'white', color: page === 'login' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Login</button>
+              <button onClick={() => setPage('signup')} style={{ background: page === 'signup' ? '#2557a7' : 'white', color: page === 'signup' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Sign Up</button>
+            </>
+          )}
         </div>
       </div>
 
@@ -51,7 +71,7 @@ function App() {
         </div>
       )}
 
-      {page === 'login' && <Login />}
+      {page === 'login' && <Login onLogin={(user) => { setUser(user); setPage('home') }} />}
       {page === 'signup' && <Signup />}
       {page === 'postjob' && <PostJob onJobPosted={() => { fetchJobs(); setPage('home') }} />}
       {page === 'resumematch' && <ResumeMatch />}
