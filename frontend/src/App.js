@@ -4,6 +4,7 @@ import Signup from './Signup'
 import PostJob from './PostJob'
 import ResumeMatch from './ResumeMatch'
 import ResumeUpload from './ResumeUpload'
+import MyApplications from './MyApplications'
 import { supabase } from './supabaseClient'
 
 function App() {
@@ -11,11 +12,15 @@ function App() {
   const [jobs, setJobs] = useState([])
   const [user, setUser] = useState(null)
   const [search, setSearch] = useState('')
+  const [applied, setApplied] = useState([])
 
   useEffect(() => {
     fetchJobs()
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setUser(session.user)
+      if (session) {
+        setUser(session.user)
+        fetchApplications(session.user.id)
+      }
     })
   }, [])
 
@@ -25,9 +30,38 @@ function App() {
     else setJobs(data)
   }
 
+  const fetchApplications = async (userId) => {
+    const { data } = await supabase.from('applications').select('job_id').eq('user_id', userId)
+    if (data) setApplied(data.map(a => a.job_id))
+  }
+
+  const handleApply = async (job) => {
+    if (!user) {
+      alert('Please login first to apply!')
+      setPage('login')
+      return
+    }
+    if (applied.includes(job.id)) {
+      alert('You already applied for this job!')
+      return
+    }
+    const { error } = await supabase.from('applications').insert([{
+      job_id: job.id,
+      user_id: user.id,
+      user_email: user.email
+    }])
+    if (error) {
+      alert('Error applying!')
+    } else {
+      setApplied([...applied, job.id])
+      alert(`✅ Successfully applied for ${job.title} at ${job.company}!`)
+    }
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setUser(null)
+    setApplied([])
     setPage('home')
   }
 
@@ -49,6 +83,7 @@ function App() {
           <button onClick={() => setPage('resumeupload')} style={{ background: page === 'resumeupload' ? '#2557a7' : 'white', color: page === 'resumeupload' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📄 Resume</button>
           {user ? (
             <>
+              <button onClick={() => setPage('myapplications')} style={{ background: page === 'myapplications' ? '#2557a7' : 'white', color: page === 'myapplications' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📋 My Jobs</button>
               <span style={{ color: '#2557a7', fontWeight: 'bold' }}>👋 {user.email}</span>
               <button onClick={handleLogout} style={{ background: 'red', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Logout</button>
             </>
@@ -80,17 +115,22 @@ function App() {
               <p style={{ margin: '5px 0', color: 'gray' }}>📍 {job.location}</p>
               <p style={{ margin: '5px 0' }}>🛠 {job.skills}</p>
               <p style={{ margin: '5px 0', color: '#555' }}>{job.description}</p>
-              <button style={{ background: '#2557a7', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' }}>Apply Now</button>
+              <button
+                onClick={() => handleApply(job)}
+                style={{ background: applied.includes(job.id) ? 'green' : '#2557a7', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' }}>
+                {applied.includes(job.id) ? '✅ Applied' : 'Apply Now'}
+              </button>
             </div>
           ))}
         </div>
       )}
 
-      {page === 'login' && <Login onLogin={(user) => { setUser(user); setPage('home') }} />}
+      {page === 'login' && <Login onLogin={(user) => { setUser(user); fetchApplications(user.id); setPage('home') }} />}
       {page === 'signup' && <Signup />}
       {page === 'postjob' && <PostJob onJobPosted={() => { fetchJobs(); setPage('home') }} />}
       {page === 'resumematch' && <ResumeMatch />}
       {page === 'resumeupload' && <ResumeUpload user={user} />}
+      {page === 'myapplications' && <MyApplications user={user} />}
 
     </div>
   )
