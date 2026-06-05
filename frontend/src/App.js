@@ -14,6 +14,16 @@ function App() {
   const [user, setUser] = useState(null)
   const [search, setSearch] = useState('')
   const [applied, setApplied] = useState([])
+  const [darkMode, setDarkMode] = useState(false)
+  const [saved, setSaved] = useState([])
+
+  const theme = {
+    bg: darkMode ? '#1a1a2e' : 'white',
+    cardBg: darkMode ? '#16213e' : '#f5f5f5',
+    text: darkMode ? 'white' : 'black',
+    subText: darkMode ? '#aaa' : 'gray',
+    border: darkMode ? '#0f3460' : '#ccc',
+  }
 
   useEffect(() => {
     fetchJobs()
@@ -23,6 +33,8 @@ function App() {
         fetchApplications(session.user.id)
       }
     })
+    const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]')
+    setSaved(savedJobs)
   }, [])
 
   const fetchJobs = async () => {
@@ -59,6 +71,17 @@ function App() {
     }
   }
 
+  const handleSave = (jobId) => {
+    let newSaved
+    if (saved.includes(jobId)) {
+      newSaved = saved.filter(id => id !== jobId)
+    } else {
+      newSaved = [...saved, jobId]
+    }
+    setSaved(newSaved)
+    localStorage.setItem('savedJobs', JSON.stringify(newSaved))
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setUser(null)
@@ -72,27 +95,31 @@ function App() {
     job.skills.toLowerCase().includes(search.toLowerCase())
   )
 
+  const savedJobs = jobs.filter(job => saved.includes(job.id))
+
   return (
-    <div style={{ fontFamily: 'Arial', maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+    <div style={{ fontFamily: 'Arial', maxWidth: '800px', margin: '0 auto', padding: '20px', background: theme.bg, minHeight: '100vh', color: theme.text }}>
 
       {/* Navbar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <h1 onClick={() => setPage('home')} style={{ color: '#2557a7', margin: 0, cursor: 'pointer' }}>🚀 AI Job Board</h1>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button onClick={() => setPage('postjob')} style={{ background: page === 'postjob' ? '#2557a7' : 'white', color: page === 'postjob' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Post Job</button>
-          <button onClick={() => setPage('resumematch')} style={{ background: page === 'resumematch' ? '#2557a7' : 'white', color: page === 'resumematch' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>🤖 Match</button>
-          <button onClick={() => setPage('resumeupload')} style={{ background: page === 'resumeupload' ? '#2557a7' : 'white', color: page === 'resumeupload' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📄 Resume</button>
-          <button onClick={() => setPage('dashboard')} style={{ background: page === 'dashboard' ? '#2557a7' : 'white', color: page === 'dashboard' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📊 Dashboard</button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={() => setDarkMode(!darkMode)} style={{ background: darkMode ? 'white' : '#1a1a2e', color: darkMode ? 'black' : 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>{darkMode ? '☀️ Light' : '🌙 Dark'}</button>
+          <button onClick={() => setPage('postjob')} style={{ background: page === 'postjob' ? '#2557a7' : 'transparent', color: page === 'postjob' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Post Job</button>
+          <button onClick={() => setPage('resumematch')} style={{ background: page === 'resumematch' ? '#2557a7' : 'transparent', color: page === 'resumematch' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>🤖 Match</button>
+          <button onClick={() => setPage('resumeupload')} style={{ background: page === 'resumeupload' ? '#2557a7' : 'transparent', color: page === 'resumeupload' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📄 Resume</button>
+          <button onClick={() => setPage('saved')} style={{ background: page === 'saved' ? '#2557a7' : 'transparent', color: page === 'saved' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>⭐ Saved {saved.length > 0 && `(${saved.length})`}</button>
+          <button onClick={() => setPage('dashboard')} style={{ background: page === 'dashboard' ? '#2557a7' : 'transparent', color: page === 'dashboard' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📊 Dashboard</button>
           {user ? (
             <>
-              <button onClick={() => setPage('myapplications')} style={{ background: page === 'myapplications' ? '#2557a7' : 'white', color: page === 'myapplications' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📋 My Jobs</button>
-              <span style={{ color: '#2557a7', fontWeight: 'bold' }}>👋 {user.email}</span>
+              <button onClick={() => setPage('myapplications')} style={{ background: page === 'myapplications' ? '#2557a7' : 'transparent', color: page === 'myapplications' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📋 My Jobs</button>
+              <span style={{ color: '#2557a7', fontWeight: 'bold', fontSize: '13px' }}>👋 {user.email}</span>
               <button onClick={handleLogout} style={{ background: 'red', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Logout</button>
             </>
           ) : (
             <>
-              <button onClick={() => setPage('login')} style={{ background: page === 'login' ? '#2557a7' : 'white', color: page === 'login' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Login</button>
-              <button onClick={() => setPage('signup')} style={{ background: page === 'signup' ? '#2557a7' : 'white', color: page === 'signup' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Sign Up</button>
+              <button onClick={() => setPage('login')} style={{ background: page === 'login' ? '#2557a7' : 'transparent', color: page === 'login' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Login</button>
+              <button onClick={() => setPage('signup')} style={{ background: page === 'signup' ? '#2557a7' : 'transparent', color: page === 'signup' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Sign Up</button>
             </>
           )}
         </div>
@@ -101,22 +128,55 @@ function App() {
       {/* Pages */}
       {page === 'home' && (
         <div>
-          <p style={{ textAlign: 'center', color: 'gray' }}>Find your dream job powered by AI</p>
+          <p style={{ textAlign: 'center', color: theme.subText }}>Find your dream job powered by AI</p>
           <input
             type="text"
             placeholder="🔍 Search by job title, company or skills..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ width: '100%', padding: '12px', marginBottom: '20px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '15px' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '20px', borderRadius: '8px', border: `1px solid ${theme.border}`, boxSizing: 'border-box', fontSize: '15px', background: theme.cardBg, color: theme.text }}
           />
           {filteredJobs.length === 0 && <p style={{ textAlign: 'center' }}>No jobs found! 😅</p>}
           {filteredJobs.map(job => (
-            <div key={job.id} style={{ background: '#f5f5f5', padding: '20px', borderRadius: '10px', marginBottom: '15px', borderLeft: '4px solid #2557a7' }}>
-              <h2 style={{ margin: '0', color: '#2557a7' }}>{job.title}</h2>
-              <p style={{ margin: '5px 0', fontWeight: 'bold' }}>{job.company}</p>
-              <p style={{ margin: '5px 0', color: 'gray' }}>📍 {job.location}</p>
-              <p style={{ margin: '5px 0' }}>🛠 {job.skills}</p>
-              <p style={{ margin: '5px 0', color: '#555' }}>{job.description}</p>
+            <div key={job.id} style={{ background: theme.cardBg, padding: '20px', borderRadius: '10px', marginBottom: '15px', borderLeft: '4px solid #2557a7' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h2 style={{ margin: '0', color: '#2557a7' }}>{job.title}</h2>
+                <button onClick={() => handleSave(job.id)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>
+                  {saved.includes(job.id) ? '⭐' : '☆'}
+                </button>
+              </div>
+              <p style={{ margin: '5px 0', fontWeight: 'bold', color: theme.text }}>{job.company}</p>
+              <p style={{ margin: '5px 0', color: theme.subText }}>📍 {job.location}</p>
+              <p style={{ margin: '5px 0', color: theme.text }}>🛠 {job.skills}</p>
+              <p style={{ margin: '5px 0', color: theme.subText }}>{job.description}</p>
+              <button
+                onClick={() => handleApply(job)}
+                style={{ background: applied.includes(job.id) ? 'green' : '#2557a7', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' }}>
+                {applied.includes(job.id) ? '✅ Applied' : 'Apply Now'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {page === 'saved' && (
+        <div>
+          <h2 style={{ color: '#2557a7' }}>⭐ Saved Jobs</h2>
+          {savedJobs.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', background: theme.cardBg, borderRadius: '10px' }}>
+              <p>No saved jobs yet!</p>
+              <p style={{ color: theme.subText }}>Click the ☆ star on any job to save it 😊</p>
+            </div>
+          )}
+          {savedJobs.map(job => (
+            <div key={job.id} style={{ background: theme.cardBg, padding: '20px', borderRadius: '10px', marginBottom: '15px', borderLeft: '4px solid gold' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h2 style={{ margin: '0', color: '#2557a7' }}>{job.title}</h2>
+                <button onClick={() => handleSave(job.id)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>⭐</button>
+              </div>
+              <p style={{ margin: '5px 0', fontWeight: 'bold', color: theme.text }}>{job.company}</p>
+              <p style={{ margin: '5px 0', color: theme.subText }}>📍 {job.location}</p>
+              <p style={{ margin: '5px 0', color: theme.text }}>🛠 {job.skills}</p>
               <button
                 onClick={() => handleApply(job)}
                 style={{ background: applied.includes(job.id) ? 'green' : '#2557a7', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' }}>
