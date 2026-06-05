@@ -5,6 +5,7 @@ import PostJob from './PostJob'
 import ResumeMatch from './ResumeMatch'
 import ResumeUpload from './ResumeUpload'
 import MyApplications from './MyApplications'
+import EmployerDashboard from './EmployerDashboard'
 import { supabase } from './supabaseClient'
 
 function App() {
@@ -81,6 +82,7 @@ function App() {
           <button onClick={() => setPage('postjob')} style={{ background: page === 'postjob' ? '#2557a7' : 'white', color: page === 'postjob' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>Post Job</button>
           <button onClick={() => setPage('resumematch')} style={{ background: page === 'resumematch' ? '#2557a7' : 'white', color: page === 'resumematch' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>🤖 Match</button>
           <button onClick={() => setPage('resumeupload')} style={{ background: page === 'resumeupload' ? '#2557a7' : 'white', color: page === 'resumeupload' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📄 Resume</button>
+          <button onClick={() => setPage('dashboard')} style={{ background: page === 'dashboard' ? '#2557a7' : 'white', color: page === 'dashboard' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📊 Dashboard</button>
           {user ? (
             <>
               <button onClick={() => setPage('myapplications')} style={{ background: page === 'myapplications' ? '#2557a7' : 'white', color: page === 'myapplications' ? 'white' : '#2557a7', border: '1px solid #2557a7', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }}>📋 My Jobs</button>
@@ -127,10 +129,11 @@ function App() {
 
       {page === 'login' && <Login onLogin={(user) => { setUser(user); fetchApplications(user.id); setPage('home') }} />}
       {page === 'signup' && <Signup />}
-      {page === 'postjob' && <PostJob onJobPosted={() => { fetchJobs(); setPage('home') }} />}
+      {page === 'postjob' && <PostJob onJobPosted={() => { fetchJobs(); setPage('home') }} user={user} />}
       {page === 'resumematch' && <ResumeMatch />}
       {page === 'resumeupload' && <ResumeUpload user={user} />}
       {page === 'myapplications' && <MyApplications user={user} />}
+      {page === 'dashboard' && <EmployerDashboard user={user} />}
 
     </div>
   )

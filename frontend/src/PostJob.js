@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from './supabaseClient'
 
-function PostJob({ onJobPosted }) {
+function PostJob({ onJobPosted, user }) {
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [location, setLocation] = useState('')
@@ -16,7 +16,7 @@ function PostJob({ onJobPosted }) {
     }
 
     const { error } = await supabase.from('jobs').insert([
-      { title, company, location, skills, description }
+      { title, company, location, skills, description, employer_email: user?.email }
     ])
 
     if (error) {
@@ -24,13 +24,12 @@ function PostJob({ onJobPosted }) {
       console.log(error)
     } else {
       setSuccess(true)
-      setSuccess(true)
-setTimeout(() => { onJobPosted() }, 1500)
       setTitle('')
       setCompany('')
       setLocation('')
       setSkills('')
       setDescription('')
+      setTimeout(() => { onJobPosted() }, 1500)
     }
   }
 
@@ -38,6 +37,8 @@ setTimeout(() => { onJobPosted() }, 1500)
     <div style={{ fontFamily: 'Arial', maxWidth: '500px', margin: '30px auto', padding: '30px', background: '#f5f5f5', borderRadius: '10px' }}>
 
       <h2 style={{ textAlign: 'center', color: '#2557a7' }}>📝 Post a Job</h2>
+
+      {!user && <p style={{ color: 'red', textAlign: 'center' }}>⚠️ Please login first to post a job!</p>}
 
       {success && <p style={{ textAlign: 'center', color: 'green', fontWeight: 'bold' }}>✅ Job posted successfully!</p>}
 
@@ -57,7 +58,8 @@ setTimeout(() => { onJobPosted() }, 1500)
         style={{ width: '100%', padding: '10px', marginBottom: '15px', borderRadius: '5px', border: '1px solid #ccc', boxSizing: 'border-box', height: '100px' }} />
 
       <button onClick={handleSubmit}
-        style={{ width: '100%', padding: '10px', background: '#2557a7', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px' }}>
+        disabled={!user}
+        style={{ width: '100%', padding: '10px', background: user ? '#2557a7' : 'gray', color: 'white', border: 'none', borderRadius: '5px', cursor: user ? 'pointer' : 'not-allowed', fontSize: '16px' }}>
         Post Job
       </button>
 
